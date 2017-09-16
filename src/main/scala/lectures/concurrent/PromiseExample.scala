@@ -10,7 +10,7 @@ object PromiseExample extends App {
   val f = p.future
 
   var doJob = true
-  // Imitation of endless async process.
+  // Imitation of endless async process..
   val runnable = new Runnable {
     override def run(): Unit = {
       var i = 0
