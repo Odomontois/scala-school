@@ -41,12 +41,21 @@ object Computation extends App with Data {
   */
 object CurriedComputation extends App with Data {
 
-  def curriedComputation(filterData: String)(dataProducer: Array[String]): Array[String] = ???
+    def curriedComputation(filterData: String)(dataProducer: Array[String]): Array[String] = {
+    //EMULATE HEAVY LOAD
+    Thread.sleep(10)
+    //PRODUCE WORDS ARRAY FROM A STRING
+    val filterArray = filterData.split(" ")
+    //EMULATE HEAVY LOAD
+    Thread.sleep(100)
+    // LEAVE ONLY EQUAL WORDS IN BOTH ARRAYS
+    dataProducer.filter(dataItem => filterArray.contains(dataItem))
+  }
 
-  val partiallyAppliedCurriedFunction = ???
+  val partiallyAppliedCurriedFunction = curriedComputation(filterData: String)_
 
-  //val result = partiallyAppliedCurriedFunction(dataArray)
-  //result.foreach(println)
+  val result = partiallyAppliedCurriedFunction(dataArray)
+  result.foreach(println)
 }
 
 /**
@@ -55,11 +64,9 @@ object CurriedComputation extends App with Data {
   * При этом постарайтесь минимизировать количество разбиений строки filterData на отдельные слова.
   */
 object FunctionalComputation extends App with Data {
-
-  def functionalComputation(filterData: String): (Array[String]) => Array[String] = ???
-
-  val filterApplied = functionalComputation(???)
-
-  val result = filterApplied(???)
+  def functionalComputation(filterData: String): (Array[String]) =>
+    Array[String] = a1 => a1.filter(el => filterData.split(" ").contains(el))
+  val filterApplied = functionalComputation(filterData)
+  val result = filterApplied(dataArray)
   result.foreach(println)
 }
