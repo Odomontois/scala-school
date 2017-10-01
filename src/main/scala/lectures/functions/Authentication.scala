@@ -30,12 +30,21 @@ object Authentication extends App {
 
   import AuthenticationData._
 
-// val authByCard: PartialFunction[???, ???] = ???
+val authByCard: PartialFunction[Credentials, Boolean] = {
+  case cr: Credentials if cr.isInstanceOf[CardCredentials] => AuthenticationData.registeredCards.contains(cr.asInstanceOf[CardCredentials])
+}
 
-// val authByLP: PartialFunction[???, ???] = ???
+val authByLP: PartialFunction[Credentials, Boolean] =  {
+  case cr: Credentials if cr.isInstanceOf[LPCredentials] => AuthenticationData.registeredLoginAndPassword.contains(cr.asInstanceOf[LPCredentials])
+}
 
   val authenticated: List[Option[User]] = for (user <- testUsers) yield {
-    ???
+    if (user.isInstanceOf[AnonymousUser]) scala.None
+    else
+      if ((user.credentials.isInstanceOf[CardCredentials] && authByCard(user.credentials)) ||
+        (user.credentials.isInstanceOf[LPCredentials] && authByLP(user.credentials)))
+      Some(user)
+    else None
   }
 
  authenticated.flatten foreach println
