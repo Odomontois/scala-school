@@ -30,14 +30,23 @@ object Authentication extends App {
 
   import AuthenticationData._
 
-// val authByCard: PartialFunction[???, ???] = ???
+  val authByCard: PartialFunction[User, User] = new PartialFunction[User, User] {
+    override def isDefinedAt(x: User): Boolean = x.isInstanceOf[CardUser]
 
-// val authByLP: PartialFunction[???, ???] = ???
-
-  val authenticated: List[Option[User]] = for (user <- testUsers) yield {
-    ???
+    override def apply(v1: User): User = v1
   }
 
- authenticated.flatten foreach println
+  val authByLP: PartialFunction[User, User] = new PartialFunction[User, User] {
+    override def isDefinedAt(x: User): Boolean = x.isInstanceOf[LPUser]
+
+    override def apply(v1: User): User = v1
+  }
+
+  val authenticated: List[Option[User]] = for (user <- testUsers) yield {
+    if (authByCard.isDefinedAt(user)) authByCard.lift(user)
+    else authByLP.lift(user)
+  }
+
+  authenticated.flatten foreach println
 
 }
