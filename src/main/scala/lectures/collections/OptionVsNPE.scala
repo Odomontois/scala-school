@@ -37,11 +37,11 @@ trait FailUtil {
 object ResourceProducer extends FailUtil {
   def produce = if (timeToFail) null else Resource(Random.alphanumeric.take(10).mkString)
 
-  val failRate: Double = 0.3
+  val failRate: Double = 0.5
 }
 
 object ConnectionProducer extends FailUtil {
-  val failRate: Double = 0.5
+  val failRate: Double = 0.3
 
   def produce(resource: Resource) = if (timeToFail) null else Connection(resource)
 
@@ -52,7 +52,9 @@ case class Connection(resource: Resource) {
   private val defaultResult = "something went wrong!"
 
   //ConnectionProducer.result(this)
-  def result(): String = ???
+  def result(): String = {
+    Option(ConnectionProducer.result(this)).getOrElse(defaultResult)
+  }
 }
 
 case class Resource(name: String)
@@ -60,12 +62,21 @@ case class Resource(name: String)
 object OptionVsNPE extends App {
 
   def businessLogic: String = try {
-    // ResourceProducer
-    val result: String = ???
+    val resource:Option[Resource] = Option(ResourceProducer.produce)
+    if (resource.isEmpty) throw new ResourceException
+    var con:Option[Connection] = None
+    while (con.isEmpty) {
+      con = Option(ConnectionProducer.produce(resource.get))
+    }
+    val result: String =  con.get.result()
     println(result)
     result
   } catch {
-    case e: ResourceException => ???
+    case e: ResourceException => {
+      println("Try again with new resource")
+      businessLogic
+    }
+
   }
 
   businessLogic
