@@ -1,5 +1,7 @@
 package lectures.collections
 
+import com.sun.istack.internal.Nullable
+
 import scala.util.Random
 
 /**
@@ -8,7 +10,7 @@ import scala.util.Random
   * Для успешного завершения задания вы должны реализовать метод businessLogic в объекте OptionVsNPE
   * Этот метод должен делать следующее:
   * * * * * Получить и распечатать результат или, если была ошибка ResourceException,
-  *         распечатать "Try again with new resource" и повторить все заново
+  * распечатать "Try again with new resource" и повторить все заново
   * * * * * Получить ресурс через ResourceProducer
   * * * * * Если ресурс не получен, кидать ResourceException (throw new ResourceException)
   * * * * * Если ресурс удачно получен, на его основе получить Connection
@@ -52,7 +54,10 @@ case class Connection(resource: Resource) {
   private val defaultResult = "something went wrong!"
 
   //ConnectionProducer.result(this)
-  def result(): String = ???
+  def result(): String =
+    Option(ConnectionProducer.result(this))
+      .getOrElse(defaultResult)
+
 }
 
 case class Resource(name: String)
@@ -61,11 +66,19 @@ object OptionVsNPE extends App {
 
   def businessLogic: String = try {
     // ResourceProducer
-    val result: String = ???
+    @Nullable
+    val resource = ResourceProducer.produce
+    if (resource == null) throw new ResourceException
+
+    var connection: Connection = null
+    while (connection == null) {
+      connection = ConnectionProducer.produce(resource)
+    }
+    val result: String = connection.result()
     println(result)
     result
   } catch {
-    case e: ResourceException => ???
+    case e: ResourceException => "Try again with new resource"
   }
 
   businessLogic

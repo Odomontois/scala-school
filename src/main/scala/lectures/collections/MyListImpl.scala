@@ -19,14 +19,20 @@ object MyListImpl extends App {
 
   case class MyList(data: List[Int]) {
 
-//    def flatMap(f: (Int => MyList)) =
-//      MyList(data.flatMap(inp => f(inp).data))
-//
-//    def map(f: ???) = ???
-//
-//    def foldLeft(acc: Int)(???): Int = ???
-//
-//    def filter(???) = ???
+    def flatMap(f: (Int => MyList)) =
+      MyList(data.flatMap(inp => f(inp).data))
+
+    def map(f: Int => Int) = flatMap(inp => MyList(f(inp) :: Nil))
+
+    def foldLeft(acc: Int)(f: ((Int, Int)) => Int): Int = this match {
+      case MyList(Nil) => acc
+      case MyList(head :: tail) => MyList(tail).foldLeft(f(head, acc))(f)
+    }
+
+    def filter(predicate: Int => Boolean) = this.flatMap(inp =>
+      if (predicate(inp)) MyList(List(inp))
+      else MyList(Nil)
+    )
   }
 
 //  require(MyList(List(1, 2, 3, 4, 5, 6)).map(_ * 2).data == List(2, 4, 6, 8, 10, 12))
