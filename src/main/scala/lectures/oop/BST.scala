@@ -33,6 +33,8 @@ trait BST {
   def add(newValue: Int): BST
 
   def find(value: Int): Option[BST]
+
+  def fold(aggregator: Int)(f: (Int, Int) => Int): Int
 }
 
 
@@ -111,13 +113,23 @@ case class BSTImpl(value: Int,
       val margin = Array.fill[Char](1 << level)(' ').mkString("")
       val halfMargin = Array.fill[Char](1 << level - 1)(' ').mkString("")
       child match {
-        case Some(bts) if isLeft =>  s"$margin ${bts.value}"
-        case Some(bts) if !isLeft =>  s"$halfMargin ${bts.value}"
+        case Some(bts) if isLeft => s"$margin ${bts.value}"
+        case Some(bts) if !isLeft => s"$halfMargin ${bts.value}"
         case None => s"$margin $margin"
       }
     }
 
     toString("")(Queue((Option(this), depth - 1, true)))
+  }
+
+  def fold(aggregator: Int)(f: (Int, Int) => Int): Int = {
+    val leftFolded =
+      if (left.isEmpty) aggregator
+      else left.get.fold(aggregator)(f)
+    val rightFolded =
+      if (right.isEmpty) aggregator
+      else right.get.fold(aggregator)(f)
+    f(leftFolded, rightFolded)
   }
 }
 

@@ -93,9 +93,12 @@ object SortingStuff extends App {
   def findMyKnife(stuffBox: StuffBox): Boolean = stuffBox.junk.contains(Knife)
 
   //вместо вопросов подставьте композицию функций  sortJunk и findMyKnife
-  val knifeIsInJunk =
-  //    (sortJunk andThen findMyKnife) (stuff)
-    findMyKnife(sortJunk(stuff))
+  val knifeIsInJunk: Boolean = {
+    val sortJ = sortJunk _
+    val findMyK = findMyKnife _
+    (sortJ andThen findMyK) (stuff)
+  }
+//    findMyKnife(sortJunk(stuff))
 
 //  val sorted = sortJunk(stuff)
 //  println(s"books = ${sorted.books.mkString(" ")}")
