@@ -13,7 +13,7 @@ sealed trait CherryTree[+T] extends LinearSeq[T]
   override def last: T = ???
   def append[S >: T](x: S): CherryTree[S]
   def prepend[S >: T](x: S): CherryTree[S] = ???
-  def concat[S >: T](xs: S): CherryTree[S] = ???
+  def concat[S >: T](xs: CherryTree[S]): CherryTree[S] = ???
   override def toString(): String = super.toString()
   override def companion = CherryTree
   override def stringPrefix: String = "CherryTree"
@@ -29,24 +29,35 @@ sealed trait CherryTree[+T] extends LinearSeq[T]
     if (isDefaultCBF(bf)) prepend(elem).asInstanceOf[That] else super.:+(elem)
 
   override def ++[B >: T, That](that: GenTraversableOnce[B])(implicit bf: CanBuildFrom[CherryTree[T], B, That]) =
-    if (isDefaultCBF(bf)) concat(that).asInstanceOf[That] else super.++(that)
+    if (isDefaultCBF(bf)) concat(that.asInstanceOf[CherryTree[B]]).asInstanceOf[That] else super.++(that)
 }
+
 case object CherryNil extends CherryTree[Nothing] {
   override def head = throw new NoSuchElementException("head of empty CherryList")
   override def tail = throw new UnsupportedOperationException("tail of empty CherryList")
+  override def init = throw new UnsupportedOperationException("init of empty CherryList")
+  override def last = throw new NoSuchElementException("head of empty CherryList")
   override def foreach[U](f: (Nothing) => U) = ()
   override def append[S >: Nothing](x: S): CherryTree[S] = CherrySingle(x)
+  override def prepend[S >: Nothing](x: S): CherryTree[S] = CherrySingle(x)
+  override def concat[S >: Nothing](xs: CherryTree[S]): CherryTree[S] = xs
   override def size = 0
   override def isEmpty = true
 }
+
 final case class CherrySingle[+T](x: T) extends CherryTree[T] {
   override def head = x
   override def tail = CherryNil
+  override def init = CherryNil
+  override def last = x
   override def foreach[U](f: T => U) = f(x)
-  def append[S >: T](y: S) = CherryBranch(Node1(x), CherryNil, Node1(y))
+  override def append[S >: T](y: S) = CherryBranch(Node1(x), CherryNil, Node1(y))
+  override def prepend[S >: T](y: S) = CherryBranch(Node1(y), CherryNil, Node1(x))
+  override def concat[S >: T](xs: CherryTree[S]): CherryTree[S] = xs.prepend(x)
   override def size = 1
   override def isEmpty = false
 }
+
 final case class CherryBranch[+T](left: Node[T], inner: CherryTree[Node2[T]], right: Node[T]) extends CherryTree[T] {
   override def head = left match {
     case Node1(x)    => x
@@ -62,14 +73,49 @@ final case class CherryBranch[+T](left: Node[T], inner: CherryTree[Node2[T]], ri
     }
     case Node2(_, x) => CherryBranch(Node1(x), inner, right)
   }
+  override def init = right match {
+    case Node1(_)    => inner match {
+      case CherryNil => left match {
+        case Node1(x)    => CherrySingle(x)
+        case Node2(x, y) => CherryBranch(Node1(x), CherryNil, Node1(y))
+      }
+      case tree      => CherryBranch(left, tree.init, tree.last)
+    }
+    case Node2(x, _) => CherryBranch(left, inner, Node1(x))
+  }
+  override def last = right match {
+    case Node1(x)    => x
+    case Node2(_, x) => x
+  }
   override def foreach[U](f: T => U) = {
     left.foreach(f)
     inner.foreach(_.foreach(f))
     right.foreach(f)
   }
-  def append[S >: T](x: S) = right match {
+  override def append[S >: T](x: S) = right match {
     case Node1(y)    => CherryBranch(left, inner, Node2(y, x))
     case n: Node2[S] => CherryBranch(left, inner.append(n), Node1(x))
+  }
+  override def prepend[S >: T](x: S): CherryTree[S] = left match {
+    case Node1(y)    => CherryBranch(Node2(x, y), inner, right)
+    case n: Node2[s] => CherryBranch(Node1(x), inner.prepend(n), right)
+  }
+  override def concat[S >: T](xs: CherryTree[S]): CherryTree[S] = if (size < xs.size) {
+    var prependTree: CherryTree[S] = this
+    var resultTree = xs
+    while (prependTree.nonEmpty) {
+      resultTree = resultTree.prepend(prependTree.last)
+      prependTree = prependTree.init
+    }
+    resultTree
+  } else {
+    var appendTree = xs
+    var resultTree: CherryTree[S] = this
+    while (appendTree.nonEmpty) {
+      resultTree = resultTree.append(appendTree.head)
+      appendTree = appendTree.tail
+    }
+    resultTree
   }
   override def size = left.size + inner.size * 2 + right.size
   override def isEmpty = false
