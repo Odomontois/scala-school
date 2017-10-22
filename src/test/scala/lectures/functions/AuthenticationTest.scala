@@ -1,6 +1,7 @@
 package lectures.functions
 
-import org.scalatest.WordSpec
+import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.prop.PropertyChecks
 
 /**
   * Авторизация - это очень важно, поэтому нам необходимо покрыть тестами ответсвенный за нее код
@@ -15,6 +16,7 @@ import org.scalatest.WordSpec
   * * * * * 1 тест на их композицию
   *
   */
-class AuthenticationTest extends WordSpec {
+class AuthenticationTest extends WordSpec with Matchers with PropertyChecks {
+
 
 }

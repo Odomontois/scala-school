@@ -34,7 +34,7 @@ class TableStyleScalaCheckTest extends WordSpec with PropertyChecks with Matcher
             else if (n != 0)
               f.numer should be < 0
             else
-              f.numer should be === 0
+              f.numer should equal(0)
 
             f.denom should be > 0
           }
