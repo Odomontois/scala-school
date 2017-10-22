@@ -10,6 +10,64 @@ sealed trait CherryTree[+T] extends LinearSeq[T]
   with GenericTraversableTemplate[T, CherryTree]
   with Product with Serializable {
 
+  override def apply(n: Int): T =
+    if (n < 0 || n >= size) throw new IndexOutOfBoundsException(s"requested elem with index $n of tree with size $size")
+    else drop(n).head
+
+  override def drop(n: Int): CherryTree[T] = {
+    def dropRecur(n: Int, tree: CherryTree[T]): CherryTree[T] = {
+      if (n >= size) CherryNil
+      else if (n <= 0) tree
+      else (tree: @unchecked) match {
+        // we check size before, so we don't need to consider CherryNil and CherrySingle
+        case CherryBranch(left, inner, right) =>
+          if (n == 1) left match {
+            case Node1(_) => inner match {
+              case CherryNil => right match {
+                case Node1(x) => CherrySingle(x)
+                case Node2(x, y) => CherryBranch(Node1(x), CherryNil, Node1(y))
+              }
+              case _ => CherryBranch(inner.head, inner.tail, right)
+            }
+            case Node2(_, y) => CherryBranch(Node1(y), inner, right)
+          } else if (n == 2) left match {
+            case Node1(_) => inner.head match {
+              case Node2(_, b) => CherryBranch(Node1(b), inner.tail, right)
+            }
+            case Node2(_, _) => inner match {
+              case CherryNil => right match {
+                case Node1(x) => CherrySingle(x)
+                case Node2(x, y) => CherryBranch(Node1(x), CherryNil, Node1(y))
+              }
+              case _ => CherryBranch(inner.head, inner.tail, right)
+            }
+          } else if (n == tree.size - 1) right match {
+            case Node1(x) => CherrySingle(x)
+            case Node2(_, y) => CherrySingle(y)
+          } else if (n == tree.size - 2) right match {
+            case Node1(a) => inner.last match {
+              case Node2(_, b) => CherryBranch(Node1(b), CherryNil, Node1(a))
+            }
+            case Node2(x, y) => CherryBranch(Node1(x), CherryNil, Node1(y))
+          } else right match {
+          case Node1(x) => dropRecur(n - left.size, flattenTree(inner)) ++ CherrySingle(x)
+          case Node2(x, y) => dropRecur(n - left.size, flattenTree(inner)) ++ CherryBranch(Node1(x), CherryNil, Node1(y))
+        }
+      }
+    }
+
+    def flattenTree(inner: CherryTree[Node2[T]], acc: CherryTree[T] = CherryNil): CherryTree[T] = {
+      inner match {
+        case CherryNil => acc
+        case _ => inner.head match {
+          case Node2(x, y) => flattenTree(inner.tail, acc ++ CherryBranch(Node1(x), CherryNil, Node1(y)))
+        }
+      }
+    }
+
+    dropRecur(n, this)
+  }
+
   override def init: CherryTree[T] = this match {
     case CherryNil => throw new UnsupportedOperationException("init of empty CherryTree")
     case CherrySingle(_) => CherryNil
@@ -170,7 +228,6 @@ sealed trait CherryTree[+T] extends LinearSeq[T]
     else concatPrepend(xs, this)
   }
 
-
   override def toString(): String = super.toString()
   override def companion: CherryTree.type = CherryTree
   override def stringPrefix: String = "CherryTree"
@@ -206,7 +263,10 @@ final case class CherrySingle[+T](x: T) extends CherryTree[T] {
   override def foreach[U](f: T => U): Unit = f(x)
   override def append[S >: T](y: S) = CherryBranch(Node1(x), CherryNil, Node1(y))
   override def prepend[S >: T](y: S) = CherryBranch(Node1(y), CherryNil, Node1(x))
-  override def size = 1
+  override def size: Int = x match {
+    case node: Node2[_] => node.size
+    case _ => 1
+  }
   override def isEmpty = false
 }
 
@@ -238,7 +298,7 @@ final case class CherryBranch[+T](left: Node[T], inner: CherryTree[Node2[T]], ri
     case Node1(y) => CherryBranch(Node2(x, y), inner, right)
     case node: Node2[S] => CherryBranch(Node1(x), inner.prepend(node), right)
   }
-  override def size: Int = left.size + inner.size * 2 + right.size
+  override def size: Int = left.size + inner.size + right.size
   override def isEmpty = false
 }
 
@@ -263,7 +323,10 @@ object CherryTree extends SeqFactory[CherryTree] {
 
   final case class Node1[+T](x: T) extends Node[T] {
     override def foreach[U](f: (T) => U): Unit = f(x)
-    def size = 1
+    def size: Int = x match {
+      case node: Node2[_] => node.size
+      case _ => 1
+    }
   }
 
   final case class Node2[+T](x: T, y: T) extends Node[T] {
@@ -271,7 +334,10 @@ object CherryTree extends SeqFactory[CherryTree] {
       f(x)
       f(y)
     }
-    def size = 2
+    def size: Int = x match {
+      case node: Node2[_] =>  2 * node.size
+      case _ => 2
+    }
   }
 
 }

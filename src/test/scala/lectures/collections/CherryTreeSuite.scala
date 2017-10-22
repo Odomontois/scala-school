@@ -40,10 +40,9 @@ class CherryTreeSuite extends FlatSpec with PropertyChecks with Matchers {
   }
 
   it should "get element by index" in forAll { (xs: Vector[Int], i: Int) =>
-    whenever(i < xs.size && i >= 0) {
-      val tree = CherryTree(xs: _*)
-      tree(i) shouldBe xs(i)
-    }
+    val tree = CherryTree(xs: _*)
+    if (i < 0 || i >= tree.size) an[IndexOutOfBoundsException] should be thrownBy tree(i)
+    else tree(i) shouldBe xs(i)
   }
 
   it should "concat elements" in forAll { (xs: List[Int], ys: List[Int]) =>
@@ -53,4 +52,10 @@ class CherryTreeSuite extends FlatSpec with PropertyChecks with Matchers {
   it should "get correct size" in forAll { (xs: Vector[Int]) =>
     CherryTree(xs: _*).size shouldBe xs.size
   }
+
+  it should "get drop" in forAll { (xs: Vector[Int], i: Int) =>
+    val tree = CherryTree(xs: _*)
+    tree.drop(i) shouldBe CherryTree(xs.drop(i): _*)
+  }
+
 }
