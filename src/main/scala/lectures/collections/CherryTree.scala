@@ -17,7 +17,9 @@ sealed trait CherryTree[+T] extends LinearSeq[T]
   override def toString(): String = super.toString()
   override def companion = CherryTree
   override def stringPrefix: String = "CherryTree"
-
+  override def apply(n: Int): T
+  override def foldLeft[B](z: B)(op: (B, T) => B): B = ???
+  override def foldRight[B](z: B)(op: (T, B) => B): B = ???
 
   // If we have a default builder, there are faster ways to perform some operations
   @inline private[this] def isDefaultCBF[A, B, That](bf: CanBuildFrom[CherryTree[A], B, That]): Boolean = bf eq CherryTree.ReusableCBF
@@ -42,6 +44,8 @@ case object CherryNil extends CherryTree[Nothing] {
   override def concat[S >: Nothing](xs: CherryTree[S]): CherryTree[S] = xs
   override def size = 0
   override def isEmpty = true
+  override def foldLeft[B](z: B)(op: (B, Nothing) => B): B = z
+  override def foldRight[B](z: B)(op: (Nothing, B) => B): B = z
 }
 
 final case class CherrySingle[+T](x: T) extends CherryTree[T] {
@@ -55,8 +59,9 @@ final case class CherrySingle[+T](x: T) extends CherryTree[T] {
   override def concat[S >: T](xs: CherryTree[S]) = xs.prepend(x)
   override def size = 1
   override def isEmpty = false
-
-  override def apply(n: Int) = if (n == 0) x else throw new NoSuchElementException
+  override def foldLeft[B](z: B)(op: (B, T) => B) = op(z, x)
+  override def foldRight[B](z: B)(op: (T, B) => B) = op(x, z)
+  override def apply(n: Int): T = if (n == 0) x else throw new NoSuchElementException
 }
 final case class CherryBranch[+T](left: Node[T], inner: CherryTree[Node2[T]], right: Node[T]) extends CherryTree[T] {
   override def head = left match {
@@ -106,7 +111,8 @@ final case class CherryBranch[+T](left: Node[T], inner: CherryTree[Node2[T]], ri
   }
 
   override def concat[S >: T](xs: CherryTree[S]) = {
-    if (this.size < xs.size) {
+    if (xs.isEmpty) this
+    else if (this.size < xs.size) {
       this.init concat (xs prepend this.last)
     } else {
       (this append xs.head) concat xs.tail
@@ -114,28 +120,57 @@ final case class CherryBranch[+T](left: Node[T], inner: CherryTree[Node2[T]], ri
   }
 
 
-  override def apply(n: Int) =
-    if (n < 0 || n >= size) throw new NoSuchElementException
-    else if (n < left.size) left match {
+  override def apply(n: Int): T =
+//    if (n < 0 || n >= size) throw new NoSuchElementException else
+    if (n < left.size) left match {
       case Node1(x) => x
-      case Node2(x, _) if n == 0 => x
-      case Node2(_, x) if n == 1 => x
+      case Node2(x, y) => if (n == 0) x else y
     } else{
-      val rightIdx = n - (left.size + inner.size) - 1
+      val rightIdx = n - (left.size + inner.size)
       if (rightIdx >= 0) right match {
         case Node1(x) => x
-        case Node2(x, _) if rightIdx == 0 => x
-        case Node2(_, x) if rightIdx == 1 => x
+        case Node2(x, y) => if (rightIdx == 0) x else y
       }
       else {
-        inner((n - left.size) / 2) match {
-          case Node2(x, _) if (n - left.size) % 2 == 0 => x
-          case Node2(_, x) => x
+        val innerIdx = n - left.size
+        inner(innerIdx / 2) match {
+          case Node2(x, y) => if (innerIdx % 2 == 0) x else y
         }
       }
     }
 
-  override def size = left.size + inner.size * 2 + right.size
+
+  override def foldLeft[B](z: B)(op: (B, T) => B): B = {
+    val leftRes = left match {
+      case Node1(x) => op(z, x)
+      case Node2(x, y) => op(op(z, x), y)
+    }
+    val innerRes = inner.foldLeft(leftRes) {
+      case (acc, _@Node2(x, y)) => op(op(acc, x), y)
+    }
+    val rightRes = right match {
+      case Node1(x) => op(innerRes, x)
+      case Node2(x, y) => op(op(innerRes, x), y)
+    }
+    rightRes
+  }
+
+  override def foldRight[B](z: B)(op: (T, B) => B): B = {
+    val rightRes = right match {
+      case Node1(x) => op(x, z)
+      case Node2(x, y) => op(x, op(y, z))
+    }
+    val innerRes = inner.foldRight(rightRes){
+      case (_@Node2(x, y), acc) => op(x, op(y, acc))
+    }
+    val leftRes = left match {
+      case Node1(x) => op(x, innerRes)
+      case Node2(x, y) => op(x, op(x, innerRes))
+    }
+    leftRes
+  }
+
+  override def size: Int = left.size + inner.size * 2 + right.size
   override def isEmpty = false
 }
 

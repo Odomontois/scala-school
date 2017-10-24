@@ -38,7 +38,7 @@ class CherryTreeSuite extends FlatSpec with PropertyChecks with Matchers {
     else xs.head shouldBe xs.head
   }
 
-  it should "get element by index" in forAll { (xs: Vector[Int], i: Int) =>
+  it should "get element by index" in forAll(minSuccessful(500)) { (xs: Vector[Int], i: Int) =>
     whenever(i < xs.size && i >= 0) {
       val tree = CherryTree(xs: _*)
       tree(i) shouldBe xs(i)
@@ -51,5 +51,13 @@ class CherryTreeSuite extends FlatSpec with PropertyChecks with Matchers {
 
   it should "get correct size" in forAll { (xs: Vector[Int]) =>
     CherryTree(xs: _*).size shouldBe xs.size
+  }
+
+  it should "get correct sum using foldRight" in forAll { (xs: Vector[Int], z: Int) =>
+    CherryTree(xs: _*).foldRight(z)(_ + _) shouldBe xs.foldRight(z)(_ + _)
+  }
+
+  it should "get correct difference(?) using foldLeft" in forAll { (xs: Vector[Int], z: Int) =>
+    CherryTree(xs: _*).foldLeft(z)(_ - _) shouldBe xs.foldLeft(z)(_ - _)
   }
 }
