@@ -13,7 +13,8 @@ sealed trait CherryTree[+T] extends LinearSeq[T]
 
   override def apply(n: Int): T =
     if (n < 0 || n >= size) throw new IndexOutOfBoundsException(s"requested elem with index $n of tree with size $size")
-    else drop(n).head
+    else if (n <= this.size / 2) drop(n).head
+    else take(n + 1).last
 
   override def drop(n: Int): CherryTree[T] = {
 
@@ -39,6 +40,33 @@ sealed trait CherryTree[+T] extends LinearSeq[T]
     }
 
     dropRecur(n, this)
+  }
+
+  override def take(n: Int): CherryTree[T] = {
+
+    @tailrec
+    def takeRecur(n: Int, tree: CherryTree[T]): CherryTree[T] = {
+      if (n >= size) tree
+      else if (n <= 0) CherryNil
+      else (tree: @unchecked) match {
+        // we check size before, so we don't need to consider CherryNil and CherrySingle
+        case CherryBranch(left, inner, _) =>
+          // optimization for quicker calculation of near to head n values
+          if (n == 1) left match {
+            case Node1(x) => CherrySingle(x)
+            case Node2(x, _) => CherrySingle(x)
+          } else if (n == 2) left match {
+            case Node1(x) => inner.head match {
+              case Node2(y, _) => CherryBranch(Node1(x), CherryNil, Node1(y))
+            }
+            case Node2(x, y) => CherryBranch(Node1(x), CherryNil, Node1(y))
+          }
+          else if (n == tree.size - 1) tree.init
+          else takeRecur(n, tree.init)
+      }
+    }
+
+    takeRecur(n, this)
   }
 
   override def init: CherryTree[T] = this match {

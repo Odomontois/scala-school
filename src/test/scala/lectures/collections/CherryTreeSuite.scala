@@ -58,4 +58,9 @@ class CherryTreeSuite extends FlatSpec with PropertyChecks with Matchers {
     tree.drop(i) shouldBe CherryTree(xs.drop(i): _*)
   }
 
+  it should "get take" in forAll { (xs: Vector[Int], i: Int) =>
+    val tree = CherryTree(xs: _*)
+    tree.take(i) shouldBe CherryTree(xs.take(i): _*)
+  }
+
 }
