@@ -2,6 +2,7 @@ package lectures.collections
 
 import lectures.collections.CherryTree.{Node, Node1, Node2}
 
+import scala.annotation.tailrec
 import scala.collection.generic._
 import scala.collection.{GenTraversableOnce, LinearSeq, LinearSeqOptimized, mutable}
 
@@ -15,33 +16,17 @@ sealed trait CherryTree[+T] extends LinearSeq[T]
     else drop(n).head
 
   override def drop(n: Int): CherryTree[T] = {
+
+    @tailrec
     def dropRecur(n: Int, tree: CherryTree[T]): CherryTree[T] = {
       if (n >= size) CherryNil
       else if (n <= 0) tree
       else (tree: @unchecked) match {
         // we check size before, so we don't need to consider CherryNil and CherrySingle
-        case CherryBranch(left, inner, right) =>
-          if (n == 1) left match {
-            case Node1(_) => inner match {
-              case CherryNil => right match {
-                case Node1(x) => CherrySingle(x)
-                case Node2(x, y) => CherryBranch(Node1(x), CherryNil, Node1(y))
-              }
-              case _ => CherryBranch(inner.head, inner.tail, right)
-            }
-            case Node2(_, y) => CherryBranch(Node1(y), inner, right)
-          } else if (n == 2) left match {
-            case Node1(_) => inner.head match {
-              case Node2(_, b) => CherryBranch(Node1(b), inner.tail, right)
-            }
-            case Node2(_, _) => inner match {
-              case CherryNil => right match {
-                case Node1(x) => CherrySingle(x)
-                case Node2(x, y) => CherryBranch(Node1(x), CherryNil, Node1(y))
-              }
-              case _ => CherryBranch(inner.head, inner.tail, right)
-            }
-          } else if (n == tree.size - 1) right match {
+        case CherryBranch(_, inner, right) =>
+          if (n == 1) tree.tail
+          // optimization for quicker calculation of near to tail n values
+          else if (n == tree.size - 1) right match {
             case Node1(x) => CherrySingle(x)
             case Node2(_, y) => CherrySingle(y)
           } else if (n == tree.size - 2) right match {
@@ -49,19 +34,7 @@ sealed trait CherryTree[+T] extends LinearSeq[T]
               case Node2(_, b) => CherryBranch(Node1(b), CherryNil, Node1(a))
             }
             case Node2(x, y) => CherryBranch(Node1(x), CherryNil, Node1(y))
-          } else right match {
-          case Node1(x) => dropRecur(n - left.size, flattenTree(inner)) ++ CherrySingle(x)
-          case Node2(x, y) => dropRecur(n - left.size, flattenTree(inner)) ++ CherryBranch(Node1(x), CherryNil, Node1(y))
-        }
-      }
-    }
-
-    def flattenTree(inner: CherryTree[Node2[T]], acc: CherryTree[T] = CherryNil): CherryTree[T] = {
-      inner match {
-        case CherryNil => acc
-        case _ => inner.head match {
-          case Node2(x, y) => flattenTree(inner.tail, acc ++ CherryBranch(Node1(x), CherryNil, Node1(y)))
-        }
+          } else dropRecur(n - 1, tree.tail)
       }
     }
 
@@ -176,6 +149,7 @@ sealed trait CherryTree[+T] extends LinearSeq[T]
       }
     }
 
+    @tailrec
     def constructTreeAppend(single: S, from: CherryTree[Node2[S]], to: CherryTree[Node2[S]]): (CherryTree[Node2[S]], S) = {
       from match {
         case CherryNil => (to, single)
@@ -185,6 +159,7 @@ sealed trait CherryTree[+T] extends LinearSeq[T]
       }
     }
 
+    @tailrec
     def constructTreePrepend(single: S, from: CherryTree[Node2[S]], to: CherryTree[Node2[S]]): (CherryTree[Node2[S]], S) = {
       from match {
         case CherryNil => (to, single)
