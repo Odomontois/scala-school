@@ -102,14 +102,7 @@ sealed trait CherryTree[+T] extends LinearSeq[T]
     def concatAppend(biggerTree: CherryTree[S], smallerTree: CherryTree[S]): CherryTree[S] = {
       smallerTree match {
         case CherryNil => biggerTree
-        case CherrySingle(x) => (biggerTree: @unchecked) match {
-          // we know that biggerTree have at least the same size as small, so it can't be CherryNil
-          case CherrySingle(y) => CherryBranch(Node1(y), CherryNil, Node1(x))
-          case CherryBranch(left, inner, right) => right match {
-            case Node1(y) => CherryBranch(left, inner, Node2(y, x))
-            case node: Node2[S] => CherryBranch(left, inner.append(node), Node1(x))
-          }
-        }
+        case CherrySingle(x) => biggerTree.append(x)
         case CherryBranch(leftSmaller, innerSmaller, rightSmaller) => (biggerTree: @unchecked) match {
           // we know that biggerTree have at least the same size as small, so it can't be neither CherryNil nor CherrySingle
           case CherryBranch(leftBigger, innerBigger, rightBigger) => rightBigger match {
@@ -141,14 +134,7 @@ sealed trait CherryTree[+T] extends LinearSeq[T]
     def concatPrepend(biggerTree: CherryTree[S], smallerTree: CherryTree[S]): CherryTree[S] = {
       smallerTree match {
         case CherryNil => biggerTree
-        case CherrySingle(x) => (biggerTree: @unchecked) match {
-          // we know that biggerTree have at least the same size as small, so it can't be CherryNil
-          case CherrySingle(y) => CherryBranch(Node1(x), CherryNil, Node1(y))
-          case CherryBranch(left, inner, right) => left match {
-            case Node1(y) => CherryBranch(Node2(x, y), inner, right)
-            case node: Node2[S] => CherryBranch(Node1(x), inner.prepend(node), right)
-          }
-        }
+        case CherrySingle(x) => biggerTree.prepend(x)
         case CherryBranch(leftSmaller, innerSmaller, rightSmaller) => (biggerTree: @unchecked) match {
           // we know that biggerTree have at least the same size as small, so it can't be neither CherryNil nor CherrySingle
           case CherryBranch(leftBigger, innerBigger, rightBigger) => leftBigger match {
