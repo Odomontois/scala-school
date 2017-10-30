@@ -1,5 +1,6 @@
 package lectures.collections
 
+import lectures.collections
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{FlatSpec, Matchers, PropSpec}
 
@@ -9,7 +10,7 @@ class CherryTreeSuite extends FlatSpec with PropertyChecks with Matchers {
     tree.append(x) shouldBe CherryTree(xs :+ x: _*)
   }
 
-  it should "prepend element" in forAll { (x: Int, xs: Vector[Int]) =>
+  it should "prepend element" in  forAll { (x: Int, xs: Vector[Int]) =>
     val tree = CherryTree(xs: _*)
     tree.prepend(x) shouldBe CherryTree(x +: xs: _*)
   }
@@ -52,4 +53,10 @@ class CherryTreeSuite extends FlatSpec with PropertyChecks with Matchers {
   it should "get correct size" in forAll { (xs: Vector[Int]) =>
     CherryTree(xs: _*).size shouldBe xs.size
   }
+
+  it should "get index of element" in forAll { (xs: Vector[Int], el: Int) =>
+    if (xs.contains(el)) CherryTree.getIndexOfElement( CherryTree(xs: _*), el) shouldBe xs.indexOf(el)
+    else CherryTree.getIndexOfElement( CherryTree(xs: _*), el) shouldBe (-1)
+  }
+
 }
