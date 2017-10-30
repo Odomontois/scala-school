@@ -17,25 +17,25 @@ class CherryTreeSuite extends FlatSpec with PropertyChecks with Matchers {
   it should "get tail" in forAll { xs: Vector[Int] =>
     val tree = CherryTree(xs: _*)
     if (xs.isEmpty) an[UnsupportedOperationException] should be thrownBy tree.tail
-    else xs.tail shouldBe CherryTree(xs.tail: _*)
+    else tree.tail shouldBe CherryTree(xs.tail: _*)
   }
 
   it should "get head" in forAll { xs: Vector[Int] =>
     val tree = CherryTree(xs: _*)
     if (xs.isEmpty) an[NoSuchElementException] should be thrownBy tree.head
-    else xs.head shouldBe xs.head
+    else tree.head shouldBe xs.head
   }
 
   it should "get init" in forAll { xs: Vector[Int] =>
     val tree = CherryTree(xs: _*)
     if (xs.isEmpty) an[UnsupportedOperationException] should be thrownBy tree.init
-    else xs.tail shouldBe CherryTree(xs.tail: _*)
+    else tree.init shouldBe CherryTree(xs.init: _*)
   }
 
   it should "get last" in forAll { xs: Vector[Int] =>
     val tree = CherryTree(xs: _*)
     if (xs.isEmpty) an[NoSuchElementException] should be thrownBy tree.last
-    else xs.head shouldBe xs.head
+    else tree.last shouldBe xs.last
   }
 
   it should "get element by index" in forAll { (xs: Vector[Int], i: Int) =>
@@ -51,5 +51,14 @@ class CherryTreeSuite extends FlatSpec with PropertyChecks with Matchers {
 
   it should "get correct size" in forAll { (xs: Vector[Int]) =>
     CherryTree(xs: _*).size shouldBe xs.size
+  }
+
+  it should "sum elements" in forAll { (xs: Vector[Int]) =>
+    CherryTree(xs: _*).sum shouldBe xs.sum
+  }
+
+  it should "fold left (multiply) elements" in forAll { (xs: Vector[Int]) =>
+    def foo = {(x: Int, r: Int) => r * x}
+    CherryTree(xs: _*).foldLeft(1)(foo) shouldBe xs.foldLeft(1)(foo)
   }
 }
