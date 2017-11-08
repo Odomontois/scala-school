@@ -51,7 +51,7 @@ class MergeSortImplWordSpecTest extends WordSpec with Matchers with GivenWhenThe
         }
       }
 
-      "throw exception" in pendingUntilFixed {
+      "throw exception" in {
         seqTest { defaultSeq => {
           When("index requested exceed it's size")
           val shuffled = scala.util.Random.shuffle(defaultSeq)
