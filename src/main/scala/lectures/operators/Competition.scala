@@ -24,21 +24,33 @@ package lectures.operators
 
 object Competition extends App {
 
-  val locals = Map("Artem" -> 6, "Sergey" -> 5, "Anton" -> 2, "Vladimir" -> "2", "Alexander" -> 4l)
+  val locals = Map[String, Int]("Artem" -> 6, "Sergey" -> 5, "Anton" -> 2, "Vladimir" -> 2, "Alexander" -> 4)
   val foreigners = Map[String, Int]("John" -> 3, "James" -> 1, "Tom" -> 2, "Dick" -> 5, "Eric" -> 6)
 
-  //  val results = for (l <- locals;
-  //                     ???) {
-  //    val localName = l._1
-  //    val localValue = l._2
-  //    ???
-  //  }
+  //  val results: Array[(String, Int)] =  new Array[(String,Int)](locals.size*foreigners.size)
 
-  //  var finalResult = 0
-  //  for (r <- results) {
-  //    if (???) finalResult = finalResult + 1
-  //    else ???
-  //  }
+  val results = for (l <- locals;
+                     f <- foreigners) yield {
+    val localName = l._1
+    val localValue: Int = l._2
 
-  print("Победила дружба")
+    val foreignName = f._1
+    val foreignValue: Int = f._2
+
+    localName + "vs" + foreignName -> (localValue - foreignValue)
+
+  }
+
+  var finalResult = 0
+  for (r <- results) {
+    if (r._2 > 0) finalResult += 1
+    else if (r._2 < 0) finalResult -= 1
+  }
+
+  val result = finalResult match {
+    case fr: Int if fr > 0 => "Наша взяла"
+    case fr: Int if fr < 0 => "Продули"
+    case _ => "Победила дружба"
+  }
+  print(result)
 }

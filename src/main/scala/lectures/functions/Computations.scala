@@ -32,34 +32,33 @@ object Computation extends App with Data {
 }
 
 /**
-  * Допишите curriedComputation, так, что бы после вызова partiallyAppliedCurriedFunction
-  * результат был бы тем же, что и в предыдущем случае
-  *
-  * Раскомментируйте последнюю строчку
-  *
-  * Какой тип имеет partiallyAppliedCurriedFunction - ?
-  */
-object CurriedComputation extends App with Data {
-
-  def curriedComputation(filterData: String)(dataProducer: Array[String]): Array[String] = ???
-
-  val partiallyAppliedCurriedFunction = ???
-
-  //val result = partiallyAppliedCurriedFunction(dataArray)
-  //result.foreach(println)
-}
-
-/**
   * Допишите реализации методов так, что бы результат совпадал с предыдущими.
   *
   * При этом постарайтесь минимизировать количество разбиений строки filterData на отдельные слова.
   */
+object CurriedComputation extends App with Data {
+
+  def curriedComputation(filterData: String)(dataProducer: Array[String]): Array[String] = {
+    val filterArray = filterData.split(" ")
+    dataProducer.filter(dataItem => filterArray.contains(dataItem))
+  }
+
+  val partiallyAppliedCurriedFunction = curriedComputation(filterData)_
+
+  val result = partiallyAppliedCurriedFunction(dataArray)
+  result.foreach(println)
+}
+
+
 object FunctionalComputation extends App with Data {
 
-  def functionalComputation(filterData: String): (Array[String]) => Array[String] = ???
 
-  val filterApplied = functionalComputation(???)
+  def functionalComputation(filterData: String): (Array[String]) => Array[String] = {
+    val filterArray = filterData.split(" ")
+    arr: Array[String] => arr.filter(dataItem => filterArray.contains(dataItem))
+  }
+  val filterApplied = functionalComputation(filterData)
 
-  val result = filterApplied(???)
+  val result = filterApplied(dataArray)
   result.foreach(println)
 }
