@@ -1,5 +1,7 @@
 package lectures.oop
 
+import lectures.oop.TreeTest.root
+
 import scala.collection.mutable.Stack
 
 
@@ -33,6 +35,10 @@ trait BST {
 
   def find(value: Int): Option[BST]
 
+  def fold(aggregator: Int)(f: (Int, Int) =>(Int)): Int
+
+  def unapply = (value,left,right)
+
 }
 
 case class BSTImpl(value: Int,
@@ -43,26 +49,24 @@ case class BSTImpl(value: Int,
     if (BSTImpl.root.isEmpty) { BSTImpl.root = Option(this)}
     if (newValue < this.value)
       this.unapply match {
-        case(_,None,_) => left = Option(BSTImpl(newValue));
+        case(_,None,_) => BSTImpl.size +=1; left = Option(BSTImpl(newValue));
         case _ => left.get.add(newValue)
       }
-    if (newValue > this.value)
+    else
       this.unapply match {
-        case(_,_,None) => right = Option(BSTImpl(newValue));
+        case(_,_,None) => BSTImpl.size +=1; right = Option(BSTImpl(newValue));
         case _ => right.get.add(newValue)
       }
     BSTImpl.root.get
   }
 
 
-  def unapply = (value,left,right)
-
   def find(value: Int): Option[BST] = {
     val stack = Stack(BSTImpl.root)
     //stack.push(BSTImpl.root)
     while (stack.nonEmpty){
       val temp = stack.top
-      //println(temp)
+      //println(temp.get.value)
       stack.pop
       if (value == temp.get.value) return temp
       if (value < temp.get.value) {
@@ -73,60 +77,88 @@ case class BSTImpl(value: Int,
     }
     None
   }
-/*
+
+  def fold(aggregator: Int)(f: (Int, Int) =>(Int)): Int ={
+    def inner(value: Int, cur:BST):Int =
+    cur.unapply match {
+      case(_,None,None) => cur.value
+      case(_,None,_) => f(cur.value,inner(value,cur.right.get))
+      case(_,_,None) => f(cur.value,inner(value,cur.left.get))
+      case _ => f(f(cur.value,inner(value,cur.left.get)), inner(value,cur.right.get))
+    }
+    inner(aggregator,BSTImpl.root.get)
+  }
+
+
+
   override def toString: String = {
     var result = new StringBuilder("")
     val stack = Stack(BSTImpl.root)
-    //stack.push(BSTImpl.root)
-    while (stack.nonEmpty){
+    /*
+    var pow = 2
+    var border = 2 * pow
+    var counter = 0
+    */
+    var noIntsonRow = false
+    while ((stack.nonEmpty) /*&& (!noIntsonRow) && (pow < 1000)*/){
       val temp = stack.top
       result.append(temp.get.value + " ")
+      //if (temp.get.value != -1) counter += 1
       stack.pop
-      if (temp.get.left.isDefined) stack.push(temp.get.left)
-      if (temp.get.right.isDefined) stack.push(temp.get.right)
+      if (temp.get.left.isDefined) { stack.push(temp.get.left)}  //else {stack.push(Some(BSTImpl(-1, None,None))) }
+      if (temp.get.right.isDefined) { stack.push(temp.get.right)} // else {stack.push(Some(BSTImpl(-1, None,None))) }
+      /*println(counter,pow,border)
+      pow += 2
+
+      if (pow == border) {
+        println(counter,pow,border)
+        border *= 2
+        if (counter >= border-1) { noIntsonRow = true }
+        counter = border/2
+      }*/
     }
     result.toString()
   }
-*/
 
-  // override def toString() = ???
 
 }
 
 object BSTImpl {
   var root: Option[BST] = None
-  var current: Option[BST] = None
-  def setCurToRoot(): Unit = {current = root}
+  var size = 1
 }
 
-object TreeTest /*extends App*/ {
+object TreeTest extends App {
 
   val sc = new java.util.Scanner(System.in)
   val maxValue = 110000
   val nodesCount = sc.nextInt()
 
-  val markerItem = (Math.random() * maxValue).toInt
-  val markerItem2 = (Math.random() * maxValue).toInt
-  val markerItem3 = (Math.random() * maxValue).toInt
+  val markerItem = (Math.random() * maxValue / 50).toInt
+  val markerItem2 = (Math.random() * maxValue / 50).toInt
+  val markerItem3 = (Math.random() * maxValue / 50).toInt
 
   // Generate huge tree
-  val root: BST = BSTImpl(maxValue / 2)
-//  val tree: BST = ??? // generator goes here
-  val tree: BST = BSTImpl(maxValue / 2)
-  // add marker items
+  val root: BST = BSTImpl(maxValue / 100)
+
+  val tree: BST =
+  (for (i <- 1 to nodesCount)
+    yield (Math.random() * maxValue).toInt).map(el => root.add(el)).last
+
+
+
+
+  //add marker items
   val testTree = tree.add(markerItem).add(markerItem2).add(markerItem3)
 
   // check that search is correct
-  //require(testTree.find(markerItem).isDefined)
-  //require(testTree.find(markerItem).isDefined)
-  //require(testTree.find(markerItem).isDefined)
+
+  require(testTree.find(markerItem).isDefined)
+  require(testTree.find(markerItem2).isDefined)
+  require(testTree.find(markerItem3).isDefined)
 
   println(testTree)
-}
+  println(BSTImpl.size)
+  println(testTree.fold(0)(_+_))
 
-object Tmp extends App{
-  val tree: BST = BSTImpl(5)
-  val testTree = tree.add(7).add(3).add(4)
-  println(tree)
-  //println(testTree.find(4))
 }
