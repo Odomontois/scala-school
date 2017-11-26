@@ -17,28 +17,33 @@ package lectures.collections
   */
 object MyListImpl extends App {
 
-  case class MyList(data: List[Int]) {
 
-    def flatMap(f: (Int => MyList)) =
+
+  case class MyList[T](data: List[T]) {
+
+    def flatMap(f: (T => MyList[T])) =
       MyList(data.flatMap(inp => f(inp).data))
 
-    def map(f: (Int => Int)) = this.flatMap(i => MyList(List(f(i))))
+    def map(f: (T => T)) = this.flatMap(i => MyList(List(f(i))))
 
-    def foldLeft(acc: Int)(f: ((Int,Int) => Int)):Int =
+    def foldLeft(acc: T)(f: ((T,T) => T)):T =
     {
-      def fl(acc2:Int, tmp:List[Int] ):Int = tmp match{
+      def fl(acc2:T, tmp:List[T] ):T = tmp match{
         case Nil => acc2
         case head::tail => fl(f(acc2,head),tail)
       }
       fl(acc, this.data)
     }
 
-    def filter(f: (Int => Boolean)) = this.flatMap(i => if (f(i))  MyList(List(i))  else MyList(Nil) )
+    def filter(f: (T => Boolean)) = this.flatMap(i => if (f(i))  MyList(List(i))  else MyList(Nil) )
   }
 
-  require(MyList(List(1, 2, 3, 4, 5, 6)).map(_ * 2).data == List(2, 4, 6, 8, 10, 12))
-  require(MyList(List(1, 2, 3, 4, 5, 6)).filter(_ % 2 == 0).data == List(2, 4, 6))
-  require(MyList(List(1, 2, 3, 4, 5, 6)).foldLeft(0)((m,n) => m + n) == 21)
-  require(MyList(Nil).foldLeft(0)((m,n) => m + n) == 0)
+
+
+
+  require(MyList[Double](List(1.1, 2.1, 3.1, 4.1, 5.1, 6.1)).map(_ * 2).data == List(2.2, 4.2, 6.2, 8.2, 10.2, 12.2))
+  require(MyList[Int](List(1, 2, 3, 4, 5, 6)).filter(_ % 2 == 0).data == List(2, 4, 6))
+  require(MyList[Int](List(1, 2, 3, 4, 5, 6)).foldLeft(0)((m,n) => m + n) == 21)
+  require(MyList[Int](Nil).foldLeft(0)((m,n) => m + n) == 0)
 
 }
