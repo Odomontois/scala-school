@@ -1,9 +1,13 @@
 package lectures.collections
 
+import org.scalactic.anyvals.PosZInt
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{FlatSpec, Matchers, PropSpec}
 
 class CherryTreeSuite extends FlatSpec with PropertyChecks with Matchers {
+
+  override implicit val generatorDrivenConfig = PropertyCheckConfiguration(sizeRange = 1000)
+
   "Cherry tree" should "append element" in forAll { (x: Int, xs: Vector[Int]) =>
     val tree = CherryTree(xs: _*)
     tree.append(x) shouldBe CherryTree(xs :+ x: _*)
@@ -52,4 +56,5 @@ class CherryTreeSuite extends FlatSpec with PropertyChecks with Matchers {
   it should "get correct size" in forAll { (xs: Vector[Int]) =>
     CherryTree(xs: _*).size shouldBe xs.size
   }
+
 }
