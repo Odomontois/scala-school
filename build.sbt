@@ -26,6 +26,8 @@ libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.13.4" % "test"
 
 libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.5.4"
 
+libraryDependencies += "com.typesafe.akka" %% "akka-typed" % "2.5.4"
+
 libraryDependencies += "com.typesafe.akka" %% "akka-remote" % "2.5.4"
 
 libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % "2.5.4"
