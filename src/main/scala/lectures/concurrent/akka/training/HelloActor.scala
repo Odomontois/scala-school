@@ -15,6 +15,7 @@ object Main extends App {
   // send the actor two messages
   helloActor ! "hello"
   helloActor ! "buenos dias"
+  system.terminate()
   // shut down the system
   //system.shutdown
 }
