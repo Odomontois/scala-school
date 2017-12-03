@@ -1,12 +1,15 @@
 package lectures.akka.chat
 
-import io.circe.{Decoder, Encoder}
+import io.circe.Encoder
 import io.circe.generic.JsonCodec
 import io.circe.generic.extras.semiauto.deriveEncoder
 
 sealed trait Out
 
 object Out {
+  @JsonCodec
+  final case class UsersInChat(names: List[String], chat: String) extends Out
+
   @JsonCodec
   final case class ChatRoomList(names: List[String]) extends Out
 

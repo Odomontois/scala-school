@@ -1,13 +1,16 @@
 package lectures.akka.chat
 
-import io.circe.{Decoder, Encoder}
 import io.circe.generic.JsonCodec
 import io.circe.generic.extras.semiauto._
+import io.circe.{Decoder, Encoder}
 
 
 sealed trait In
 
 object In {
+  @JsonCodec
+  final case class Users() extends In
+
   @JsonCodec
   final case class Channels() extends In
 
