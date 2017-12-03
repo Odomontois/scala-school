@@ -1,10 +1,16 @@
 package lectures.akka.chat
 
+import akka.actor.Scheduler
+import akka.typed.scaladsl.AskPattern._
 import akka.typed.scaladsl.{Actor, ActorContext}
 import akka.typed.{ActorRef, Behavior}
+import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 
+import scala.concurrent.ExecutionContext
+
 object Session extends LazyLogging{
+  import scala.concurrent.duration._
   sealed trait Message
 
   final case class ChatList(names: List[String]) extends Message
@@ -38,7 +44,12 @@ object Session extends LazyLogging{
         in match {
           case Enter(newLogin, name) =>
             hub ! Hub.Connect(name, newLogin, ctx.self)
-          case Create(name)          => hub ! Hub.NewChat(name)
+          case Create(name)          =>
+            implicit val ec: ExecutionContext = ctx.executionContext
+            implicit val timeout: Timeout = Timeout(1.second)
+            implicit val sch: Scheduler = ctx.system.scheduler
+            val future: scala.concurrent.Future[Boolean] = hub ? (Hub.NewChat(name, _))
+            future.map(if (_) "success" else "failure").foreach(out ! Out.CreateResponse(_))
           case Channels()            => hub ! Hub.GetChats(ctx.self)
 
         }

@@ -13,7 +13,7 @@ object Hub extends LazyLogging {
   final case class GetChats(session: ActorRef[Session.Message]) extends Message
   final case class Connect(name: String, login: String, session: ActorRef[Session.Message]) extends Message
   final case class NewSession(respond: ActorRef[ActorRef[Session.Message]]) extends Message
-  final case class NewChat(name: String) extends Message
+  final case class NewChat(name: String, replyTo: ActorRef[Boolean]) extends Message
 
   def adapt()(implicit usys: untyped.ActorSystem): ActorSystem[Hub.Message] =
     ActorSystem.adapter[Message]("chat-hub", behaiour)
@@ -36,8 +36,13 @@ object Hub extends LazyLogging {
         case NewSession(respond)           =>
           logger.info("new client connected")
           respond ! ctx.spawnAnonymous(Session.initial)
-        case NewChat(name)                 =>
-          chats += name -> ctx.spawn(Chat.behavior(name), s"chat-$name")
+        case NewChat(name, replyTo)                 =>
+          if (chats.contains(name))
+            replyTo ! false
+          else {
+            chats += name -> ctx.spawn(Chat.behavior(name), s"chat-$name")
+            replyTo ! true
+          }
       }
       Actor.same
     }
