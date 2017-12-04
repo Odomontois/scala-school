@@ -12,6 +12,7 @@ object Session extends LazyLogging{
   final case class UserEnter(name: String) extends Message
   final case class UserLeave(name: String) extends Message
   final case class NewMessage(login: String, text: String) extends Message
+  final case class NewWhisper(from: String, text: String) extends Message
   final case class Input(in: In) extends Message
   final case class Init(hub: ActorRef[Hub.Message], out: ActorRef[Out]) extends Message
   case object Disconnect extends Message
@@ -51,12 +52,22 @@ object Session extends LazyLogging{
         case NewMessage(author, text) =>
           out ! Out.MessageSent(author, text)
           Actor.same
+        case NewWhisper(author, text) =>
+          out ! Out.WhisperSent(author, text)
+          Actor.same
         case UserEnter(userLogin)     =>
           out ! Out.NewPersonEntered(userLogin)
           Actor.same
-        case Input(In.Send(text))     =>
-          chat ! Chat.SendText(login, text)
-          Actor.same
+        case Input(in)     =>
+          import In._
+          in match {
+            case Send(text) =>
+              chat ! Chat.SendText(login, text)
+              Actor.same
+            case Whisper(to, text) =>
+              chat ! Chat.SendWhisper(login, to, text)
+              Actor.same
+          }
         case msg                      => common(ctx)(msg)
       }
     }

@@ -1,8 +1,8 @@
 package lectures.akka.chat
 
-import io.circe.{Decoder, Encoder}
 import io.circe.generic.JsonCodec
 import io.circe.generic.extras.semiauto._
+import io.circe.{Decoder, Encoder}
 
 
 sealed trait In
@@ -16,6 +16,9 @@ object In {
 
   @JsonCodec
   final case class Create(chat: String) extends In
+
+  @JsonCodec
+  final case class Whisper(toLogin: String, text: String) extends In
 
   @JsonCodec
   final case class Send(text: String) extends In
