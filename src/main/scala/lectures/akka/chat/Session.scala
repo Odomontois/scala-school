@@ -56,6 +56,9 @@ object Session extends LazyLogging{
         case UserEnter(userLogin)     =>
           out ! Out.NewPersonEntered(userLogin)
           Actor.same
+        case UserLeave(userLogin)     =>
+          out ! Out.PersonLeft(userLogin)
+          Actor.same
         case Input(In.Send(text))     =>
           chat ! Chat.SendText(login, text)
           Actor.same

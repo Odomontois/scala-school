@@ -31,7 +31,6 @@ object ChatServer {
   def chatUser(hub: ActorRef[Hub.Message]): Flow[Message, Message, NotUsed] = {
     val sessionRef = ActorRef(hub ? Hub.NewSession)
 
-
     val input: Sink[Message, NotUsed] = Flow[Message]
       .collect { case mes: TextMessage => mes }
       .mapAsync(1) { mes =>

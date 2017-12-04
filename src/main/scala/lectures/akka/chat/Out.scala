@@ -1,6 +1,6 @@
 package lectures.akka.chat
 
-import io.circe.{Decoder, Encoder}
+import io.circe.Encoder
 import io.circe.generic.JsonCodec
 import io.circe.generic.extras.semiauto.deriveEncoder
 
@@ -12,6 +12,9 @@ object Out {
 
   @JsonCodec
   final case class NewPersonEntered(name: String) extends Out
+
+  @JsonCodec
+  final case class PersonLeft(name: String) extends Out
 
   @JsonCodec
   final case class MessageSent(login: String, message: String) extends Out
