@@ -14,7 +14,6 @@ import akka.{NotUsed, actor => untyped}
 import com.typesafe.config.ConfigFactory
 import io.circe.parser._
 import io.circe.syntax._
-import lectures.akka.chat.Chat.Disconnect
 
 import scala.concurrent.duration._
 import scala.io.StdIn
@@ -31,6 +30,7 @@ object ChatServer {
 
   def chatUser(hub: ActorRef[Hub.Message]): Flow[Message, Message, NotUsed] = {
     val sessionRef = ActorRef(hub ? Hub.NewSession)
+
 
     val input: Sink[Message, NotUsed] = Flow[Message]
       .collect { case mes: TextMessage => mes }

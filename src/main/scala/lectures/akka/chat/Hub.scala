@@ -2,7 +2,7 @@ package lectures.akka.chat
 
 import akka.typed.scaladsl.Actor
 import akka.typed.scaladsl.Actor.MutableBehavior
-import akka.typed.{ActorRef, ActorSystem, Behavior, scaladsl}
+import akka.typed.{ActorRef, ActorSystem, Behavior, Signal, Terminated, scaladsl}
 import akka.{actor => untyped}
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
@@ -35,9 +35,18 @@ object Hub extends LazyLogging {
           }
         case NewSession(respond)           =>
           logger.info("new client connected")
-          respond ! ctx.spawnAnonymous(Session.initial)
+          val session = ctx.spawnAnonymous(Session.initial)
+          ctx.watch(session)
+          respond ! session
         case NewChat(name)                 =>
-          chats += name -> ctx.spawn(Chat.behavior(name), s"chat-$name")
+          chats += name -> ctx.spawn(Chat.behavior(ctx, name), s"chat-$name")
+      }
+      Actor.same
+    }
+
+    def onSignal(signal: Signal): Behavior[Message] = {
+      signal match {
+        case Terminated(session) =>
       }
       Actor.same
     }

@@ -33,6 +33,8 @@ object Session extends LazyLogging{
       case Connected(name, login, newChat) =>
         out ! Out.Connected(name)
         inChat(newChat, login)
+      case Disconnect                      =>
+        Actor.stopped
       case Input(in)                       =>
         import In._
         in match {
