@@ -8,7 +8,7 @@ sealed trait Out
 
 object Out {
   @JsonCodec
-  final case class ChatRoomList(names: List[String]) extends Out
+   final case class ChatRoomList(names: List[String]) extends Out
 
   @JsonCodec
   final case class NewPersonEntered(name: String) extends Out
@@ -18,6 +18,9 @@ object Out {
 
   @JsonCodec
   final case class Connected(chat: String) extends Out
+
+  @JsonCodec
+  final case class AvalibleCreate(chat: String) extends Out
 
   implicit val circeConfig = io.circe.generic.extras.Configuration.default
                              .withDiscriminator("type")

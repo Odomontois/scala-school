@@ -96,9 +96,9 @@ object AkkaTypedHello {
 
 
 
-    //    val greeter = system ? (GetGreeter("hello", _: ActorRef[ActorRef[String]]))
+//        val greeter = system ? (GetGreeter("hello", _: ActorRef[ActorRef[String]]))
 
-    //    system  ("hello", "Oleg")
+//        system  ("hello", "Oleg")
     //    system ! ("aloha", "Anton")
     //    system ! ("hello", "Anton")
 

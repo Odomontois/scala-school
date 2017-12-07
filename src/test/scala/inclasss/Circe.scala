@@ -5,9 +5,9 @@ import io.circe.syntax._
 
 object Circe extends App {
   println(Map[String, In](
-    "a" -> In.Create("foooasdasd  asd"),
-    "b" -> In.Send("1231 sdfds !!!"),
-    "c" -> In.Enter("lolo", "uuu")
+    "a" -> In.Create("room1"),
+    "b" -> In.Send("hello"),
+    "c" -> In.Enter("vasia", "room1")
   ).asJson)
 
 }
