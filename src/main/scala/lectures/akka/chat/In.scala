@@ -12,6 +12,9 @@ object In {
   final case class Channels() extends In
 
   @JsonCodec
+  final case class Users() extends In
+
+  @JsonCodec
   final case class Enter(login: String, chat: String) extends In
 
   @JsonCodec

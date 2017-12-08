@@ -16,6 +16,8 @@ object Session extends LazyLogging {
 
   final case class ChatList(names: List[String]) extends Message
 
+  final case class UserList(names: List[String]) extends Message
+
   final case class Connected(name: String, login: String, chat: ActorRef[Chat.Message]) extends Message
 
   final case class UserEnter(name: String) extends Message
@@ -84,6 +86,17 @@ object Session extends LazyLogging {
         case Input(In.Send(text)) =>
           chat ! Chat.SendText(login, text)
           Actor.same
+        case Input(In.Users()) => {
+          implicit val sched = ctx.system.scheduler
+          implicit val timeout = Timeout(10.second)
+          implicit val exec_context = ctx.executionContext
+          val respond_ans: Future[UserList] = chat ? ((respond: ActorRef[UserList]) => Chat.GetUsers(respond))
+          respond_ans.onComplete{
+            case Success(UserList(users)) => out ! Out.UsersList(users)
+            case Failure(t) => println("An error has occured: " + t.getMessage)
+          }
+          Actor.same
+        }
         case msg => common(ctx)(msg)
       }
     }

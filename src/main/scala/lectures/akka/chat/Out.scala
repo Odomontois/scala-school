@@ -11,6 +11,9 @@ object Out {
    final case class ChatRoomList(names: List[String]) extends Out
 
   @JsonCodec
+  final case class UsersList(names: List[String]) extends Out
+
+  @JsonCodec
   final case class NewPersonEntered(name: String) extends Out
 
   @JsonCodec

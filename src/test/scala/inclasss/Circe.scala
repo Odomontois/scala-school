@@ -7,7 +7,8 @@ object Circe extends App {
   println(Map[String, In](
     "a" -> In.Create("room1"),
     "b" -> In.Send("hello"),
-    "c" -> In.Enter("vasia", "room1")
+    "c" -> In.Enter("vasia", "room1"),
+    "d" -> In.Users()
   ).asJson)
 
 }
