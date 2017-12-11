@@ -67,7 +67,7 @@ object ChatServer {
   }
 
   def main(args: Array[String]): Unit = {
-    Http().bindAndHandle(route, "0.0.0.0", 9889).flatMap { bnd =>
+    Http().bindAndHandle(route, "localhost", 9889).flatMap { bnd =>
       println(s"bound to ${bnd.localAddress}")
       println(s"enter `stop` to shutdown")
       while (StdIn.readLine().trim != "stop") {}

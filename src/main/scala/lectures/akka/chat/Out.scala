@@ -19,6 +19,9 @@ object Out {
   @JsonCodec
   final case class Connected(chat: String) extends Out
 
+  @JsonCodec
+  final case class ChannelCreated(message: String) extends Out
+
   implicit val circeConfig = io.circe.generic.extras.Configuration.default
                              .withDiscriminator("type")
                              .withSnakeCaseConstructorNames
