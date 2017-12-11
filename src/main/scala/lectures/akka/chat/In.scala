@@ -20,6 +20,9 @@ object In {
   @JsonCodec
   final case class Send(text: String) extends In
 
+  @JsonCodec
+  final case class Users() extends In
+
   implicit val circeConfig = io.circe.generic.extras.Configuration.default
     .withDiscriminator("type")
     .withSnakeCaseConstructorNames

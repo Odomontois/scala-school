@@ -21,6 +21,7 @@ object Session extends LazyLogging{
   final case class NewMessage(login: String, text: String) extends Message
   final case class Input(in: In) extends Message
   final case class Init(hub: ActorRef[Hub.Message], out: ActorRef[Out]) extends Message
+  final case class UserList(logins: List[String], chat: String) extends Message
   case object Disconnect extends Message
 
   val initial: Behavior[Message] = Actor.immutable {
@@ -51,7 +52,7 @@ object Session extends LazyLogging{
             implicit val sch: Scheduler = ctx.system.scheduler
             val future: Future[Boolean] = hub ? ((rec: ActorRef[Boolean]) => Hub.NewChat(name, rec))
             future.onComplete{
-              case Success(t) => out ! Out.ChannelCreated(if (t) s"$name was create " else s"$name alredy excists")
+              case Success(t) => out ! Out.ChannelCreated(if (t) s"$name was created " else s"$name already excists")
               case Failure(m) => println("An error has been occured: " + m.getMessage)
             }
 
@@ -73,7 +74,18 @@ object Session extends LazyLogging{
         case Input(In.Send(text))     =>
           chat ! Chat.SendText(login, text)
           Actor.same
-        case msg                      => common(ctx)(msg)
+
+        case Input(In.Users()) =>
+          implicit val context: ExecutionContext = ctx.executionContext
+          implicit val scheduler: Scheduler = ctx.system.scheduler
+          implicit val timeout: Timeout = 3.second
+          val future: Future[Session.UserList] = chat ? Chat.Users
+          future
+            .map{case Session.UserList(logins, chat) => Out.UsersInChat(logins, chat)}
+            .foreach(out ! _)
+          Actor.same
+
+          case msg                      => common(ctx)(msg)
       }
     }
 
