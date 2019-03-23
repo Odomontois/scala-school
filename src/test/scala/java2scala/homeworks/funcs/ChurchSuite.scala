@@ -165,5 +165,27 @@ class ChurchSuite extends WordSpec with Matchers with PropertyChecks {
         xs.filter(f) ++ ys.filter(f) shouldEqual (xs ++ ys).filter(f)
       }
     }
+
+    "drop" should {
+      "be compatible with collection drop" in forAll { (xs: List[Long], dropCount: Int) =>
+        ChurchList(xs: _*).drop(dropCount).toList shouldEqual xs.drop(dropCount)
+      }
+
+      "be compatible with collection drop, when drop count is negative" in forAll { (xs: List[Long], dropCount: Int) =>
+        whenever(dropCount < 0) {
+          ChurchList(xs: _*).drop(dropCount).toList shouldEqual xs.drop(dropCount)
+        }
+      }
+
+      "be compatible with collection drop, when drop count is more than list length" in forAll { (xs: List[Long], dropCount: Int) =>
+        whenever(dropCount > xs.length) {
+          ChurchList(xs: _*).drop(dropCount).toList shouldEqual xs.drop(dropCount)
+        }
+      }
+
+      "return empty for empty" in { dropCount: Int =>
+        ChurchList.empty[Int].drop(dropCount) shouldEqual ChurchList.empty[Int]
+      }
+    }
   }
 }
